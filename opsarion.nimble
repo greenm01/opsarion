@@ -30,6 +30,9 @@ const
   WaylandFlags =
     "--mm:orc --deepcopy:on -d:waylandBackend --path:. --hint:Name:off " &
     WaylandLinkFlags
+  VulkanWaylandFlags =
+    "--mm:orc --deepcopy:on -d:nimPreviewFloatRoundtrip " &
+    "-d:opsVulkan -d:waylandBackend --path:. --hint:Name:off " & WaylandLinkFlags
 
 proc sh(cmd: string) =
   exec cmd
@@ -82,6 +85,9 @@ proc buildOkysForBackend(backend: string) =
 proc buildOkysGl() =
   buildOkysForBackend("gl")
 
+proc buildOkysVulkan() =
+  buildOkysForBackend("vulkan")
+
 proc buildOkysWgpu() =
   quit "Ops-side WebGPU host tasks are disabled; use the Okys platform host ABI instead."
   buildOkysForBackend("wgpu")
@@ -122,6 +128,17 @@ proc compileWgpuApp(source, nimcache: string) =
   buildWgpuBackendIfNeeded()
   nimCompile(source, wgpuFlags() & " -d:debug", nimcache = nimcache)
 
+proc compileLayoutDemo(source, nimcache: string) =
+  when defined(linux):
+    if existsEnv("WAYLAND_DISPLAY"):
+      buildOkysVulkan()
+      buildWaylandBackend()
+      nimCompile(source, VulkanWaylandFlags & " -d:debug", nimcache = nimcache)
+    else:
+      compileGlApp(source, nimcache)
+  else:
+    compileGlApp(source, nimcache)
+
 task test, "build test example":
   compileGlApp("examples/test", "/tmp/ops_example_test_d")
 
@@ -132,26 +149,30 @@ task minimal, "build minimal wgpu example":
   compileWgpuApp("examples/minimal", "/tmp/ops_minimal_d")
 
 task layoutInspectorDemo, "build layout inspector demo":
-  compileGlApp("examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d")
+  compileLayoutDemo(
+    "examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d"
+  )
 
 task layoutAttachDemo, "build layout attach demo":
-  compileGlApp("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
+  compileLayoutDemo("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
 
 task layoutAspectDemo, "build layout aspect-ratio demo":
-  compileGlApp("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
+  compileLayoutDemo("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
 
 task layoutErrorsDemo, "build layout diagnostics demo":
-  compileGlApp("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
+  compileLayoutDemo("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
 
 task layoutStressDemo, "build layout stress demo":
-  compileGlApp("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
+  compileLayoutDemo("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
 
 task layoutDemos, "build every layout-focused demo":
-  compileGlApp("examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d")
-  compileGlApp("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
-  compileGlApp("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
-  compileGlApp("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
-  compileGlApp("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
+  compileLayoutDemo(
+    "examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d"
+  )
+  compileLayoutDemo("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
+  compileLayoutDemo("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
+  compileLayoutDemo("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
+  compileLayoutDemo("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
 
 task waylandMinimal, "build native Wayland minimal example":
   buildWaylandBackend()

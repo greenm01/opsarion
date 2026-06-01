@@ -3,6 +3,9 @@ import std/os
 
 when defined(opsWgpu):
   import ops/backends/wgpu_app
+elif defined(opsVulkan):
+  import ops/backends/okys_vulkan_host
+  import ops/backends/wayland_app
 else:
   import glad/gl
   import glfw
@@ -24,11 +27,68 @@ proc loadDefaultDemoFonts(rc: OpsRenderContext) =
   if rc.createFont("sans-bold", dataDir / "Roboto-Bold.ttf") == NoFont:
     quit "Could not load bold font."
 
+when defined(opsVulkan):
+  proc okysTextureFormat(backend: OkysVulkanHost): WebGPUTextureFormat =
+    case backend.okysSurfaceFormatCode()
+    of 1:
+      wgtfBGRA8Unorm
+    of 2:
+      wgtfRGBA8Unorm
+    else:
+      quit "Unsupported Vulkan surface format for okys."
+
 proc runWgpuDemo*(title: string, width, height: int, render: DemoRenderProc) =
   when defined(opsWgpu):
     var config = defaultOpsWgpuAppConfig(title, width, height)
     config.shouldClose = exampleQuitShortcutDown
     runOpsWgpuApp(config, render)
+  elif defined(opsVulkan):
+    let app = newOpsWaylandApp(title, width, height)
+    app.waitUntilConfigured()
+    app.updateSurfaceSize()
+
+    var backend: OkysVulkanHost
+    backend.initOkysVulkanHostWithSurface(
+      app.surfaceHandle(), app.surfaceWidth, app.surfaceHeight
+    )
+    let colorFormat = backend.okysTextureFormat()
+
+    let rc = createRenderContext({rifSparseStrip})
+    init(rc, noGlfwProcAddress)
+    rc.setupVulkan(
+      backend.okysInstanceHandle(),
+      backend.okysPhysicalDeviceHandle(),
+      backend.okysDeviceHandle(),
+      backend.okysQueueHandle(),
+      backend.okysQueueFamilyIndex(),
+      colorFormat,
+    )
+    loadDefaultDemoFonts(rc)
+
+    while not app.shouldClose():
+      app.pollEvents()
+      if exampleQuitShortcutDown():
+        app.shouldClose = true
+        continue
+
+      app.updateSurfaceSize()
+      backend.resizeOkysVulkanHost(app.surfaceWidth, app.surfaceHeight)
+      var frame = backend.beginOkysVulkanFrame()
+      if frame.renderView.isNil:
+        continue
+
+      rc.setVulkanRenderTarget(
+        frame.renderImage, frame.renderView, frame.depthStencilImage,
+        frame.depthStencilView, frame.renderFinishedSemaphore,
+        frame.presentCompleteSemaphore, frame.width.int, frame.height.int, colorFormat,
+      )
+      render(rc)
+      discard backend.presentOkysVulkanFrame(frame)
+
+    deinit()
+    deleteRenderContext(rc)
+    backend.destroyOkysVulkanHost()
+    app.destroy()
   else:
     glfw.initialize()
 
