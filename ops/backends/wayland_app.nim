@@ -88,8 +88,7 @@ proc onMouseMove(x, y: cdouble, userdata: pointer) {.cdecl.} =
 proc onMouseButton(btn: uint32, pressed: bool, userdata: pointer) {.cdecl.} =
   let app = cast[OpsWaylandApp](userdata)
   if app != nil:
-    queueMouseButtonEvent(waylandMouseButton(btn), pressed, app.mouseX,
-        app.mouseY, {})
+    queueMouseButtonEvent(waylandMouseButton(btn), pressed, app.mouseX, app.mouseY, {})
 
 proc onScroll(dx, dy: cdouble, userdata: pointer) {.cdecl.} =
   queueScrollEvent(-dx / 10.0, -dy / 10.0)
@@ -114,7 +113,8 @@ proc installWaylandPlatformHooks*(app: OpsWaylandApp) =
       discard,
     setCursorShape: proc(shape: CursorShape) =
       if gWaylandApp.window != nil:
-        opsWaylandSetCursorShape(gWaylandApp.window, waylandCursorShape(shape)),
+        opsWaylandSetCursorShape(gWaylandApp.window, waylandCursorShape(shape))
+    ,
     setCursorMode: proc(mode: PlatformCursorMode) =
       discard,
     clipboardGet: proc(): string =

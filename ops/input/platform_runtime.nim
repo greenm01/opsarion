@@ -41,8 +41,7 @@ const
 proc isDoubleClick*(): bool =
   alias(ui, g_uiState)
 
-  ui.mbLeftDown and core.currentTime() - ui.lastMbLeftDownT <=
-      DoubleClickMaxDelay and
+  ui.mbLeftDown and core.currentTime() - ui.lastMbLeftDownT <= DoubleClickMaxDelay and
     abs(ui.lastMbLeftDownX - ui.mx) <= DoubleClickMaxXOffs and
     abs(ui.lastMbLeftDownY - ui.my) <= DoubleClickMaxYOffs
 
@@ -69,9 +68,7 @@ proc fromClipboard*(): string =
   platformClipboardGet()
 
 proc initWithPlatform*(
-    vg: OpsRenderContext,
-    glfwGetProcAddress: proc,
-    shortcuts: ShortcutMode = smLinux,
+    vg: OpsRenderContext, glfwGetProcAddress: proc, shortcuts: ShortcutMode = smLinux
 ) =
   initCore(vg, glfwGetProcAddress)
   useShortcuts(shortcuts)

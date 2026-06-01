@@ -129,8 +129,8 @@ proc releaseDepthTarget(h: var OkysWgpuHost) =
 proc ensureDepthTarget(h: var OkysWgpuHost, width, height: uint32) =
   if width == 0 or height == 0:
     return
-  if not h.depthTexture.isNil and
-      h.depthTexture.getWidth() == width and h.depthTexture.getHeight() == height:
+  if not h.depthTexture.isNil and h.depthTexture.getWidth() == width and
+      h.depthTexture.getHeight() == height:
     return
 
   h.releaseDepthTarget()

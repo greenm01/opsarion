@@ -29,9 +29,8 @@ proc pxRatio*(): float =
   let (winWidth, _) = platformWindowSize()
   let (fbWidth, _) = platformSurfaceSize()
   result = fbWidth.float / (winWidth.float / g_uiState.scale)
-  when defined(opsWgpu) or defined(opsVulkan):
-    let (xscale, _) = platformContentScale()
-    result = max(result, xscale)
+  let (xscale, _) = platformContentScale()
+  result = max(result, xscale)
 
 proc getPxRatio*(): float =
   pxRatio()

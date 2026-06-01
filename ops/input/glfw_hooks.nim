@@ -113,7 +113,8 @@ when defined(opsGlfwAdapter) and not defined(waylandBackend):
       setCursorPos: proc(x, y: float) =
         let win = activeGlfwWindow()
         if not win.isNil:
-          glfwLib.`cursorPos=`(win, (x, y)),
+          glfwLib.`cursorPos=`(win, (x, y))
+      ,
       setCursorShape: proc(shape: CursorShape) =
         let win = activeGlfwWindow()
         if win.isNil:
@@ -138,7 +139,8 @@ when defined(opsGlfwAdapter) and not defined(waylandBackend):
         elif shape == csResizeAll:
           c = g_cursorResizeAll
         if not c.isNil:
-          glfwLib.`cursor=`(win, c),
+          glfwLib.`cursor=`(win, c)
+      ,
       setCursorMode: proc(mode: PlatformCursorMode) =
         let win = activeGlfwWindow()
         if not win.isNil:
@@ -149,7 +151,8 @@ when defined(opsGlfwAdapter) and not defined(waylandBackend):
             of pcmHidden: glfwLib.cmHidden
             of pcmDisabled: glfwLib.cmDisabled
             ,
-          ),
+          )
+      ,
       clipboardGet: proc(): string =
         let win = activeGlfwWindow()
         if win.isNil:
@@ -159,7 +162,8 @@ when defined(opsGlfwAdapter) and not defined(waylandBackend):
       clipboardSet: proc(text: string) =
         let win = activeGlfwWindow()
         if not win.isNil:
-          glfwLib.`clipboardString=`(win, text),
+          glfwLib.`clipboardString=`(win, text)
+      ,
     )
     setPlatformHooks(hooks)
 
