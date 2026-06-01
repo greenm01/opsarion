@@ -21,7 +21,7 @@ var
   pickerColor = rgb(0.88, 0.18, 0.16)
   treeOpen = true
   treeChildOpen = true
-  listSelected: array[30, bool]
+  listSelection = initItemSelection(30, selected = 0)
   chartValues = @[0.15, 0.45, 0.25, 0.8, 0.55, 0.95, 0.35]
   chartValuesAlt = @[0.30, 0.25, 0.55, 0.35, 0.75, 0.50, 0.85]
   tableSort = TableSortState(column: -1, direction: tsdNone)
@@ -153,8 +153,17 @@ proc renderUI() =
       closePopup()
 
   layoutSpace(130.0):
-    listView(0, 0, 300, 120, listSelected.len.Natural, 22.0, i):
-      discard selectable(0, i.float * 22.0, 280, 20, "List item " & $i, listSelected[i])
+    listView(0, 0, 300, 120, listSelection.itemCount, 22.0, i):
+      var itemSelected = listSelection.isSelected(i)
+      if selectable(0, i.float * 22.0, 280, 20, "List item " & $i, itemSelected):
+        let mode =
+          if shiftDown():
+            ismRange
+          elif ctrlDown():
+            ismToggle
+          else:
+            ismReplace
+        listSelection.select(i, mode)
 
   label("Groups, Horizontal Scroll, Chart, Table:")
   layoutSpace(110.0):
