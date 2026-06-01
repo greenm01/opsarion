@@ -1,0 +1,131 @@
+import ops/okys
+
+import ops/types
+import ops/core
+import ops/drawing
+import ops/layout
+import ops/rect
+import ops/input
+import ops/defaults
+import ops/internal/algorithms
+import ops/utils
+
+proc openPopup*(id: ItemId) =
+  alias(ui, g_uiState)
+  alias(ps, ui.popupState)
+
+  ps.activeItem = id
+  ps.state = psOpenLMBDown
+  ps.closed = false
+  markActive(id)
+  ui.focusCaptured = true
+  requestFrames()
+
+proc closePopup*() =
+  alias(ui, g_uiState)
+  alias(ps, ui.popupState)
+
+  ps.activeItem = 0
+  ps.state = psOpenLMBDown
+  ps.closed = true
+  if ui.activeItem != 0:
+    ui.activeItem = 0
+  ui.focusCaptured = false
+  requestFrames()
+
+proc isPopupOpen*(id: ItemId): bool =
+  g_uiState.popupState.activeItem == id and not g_uiState.popupState.closed
+
+proc beginPopupWithSlot*(
+    id: ItemId, slot: LayoutSlot, style: PopupStyle = borrowDefaultPopupStyle()
+): bool =
+  alias(ui, g_uiState)
+  alias(ps, ui.popupState)
+
+  if not isPopupOpen(id):
+    return false
+
+  let hitBounds = slot.previousBounds
+
+  if ui.hasEvent and not ui.eventHandled and ui.currEvent.kind == ekKey and
+      ui.currEvent.action == kaDown and ui.currEvent.key == keyEscape:
+    markEventHandled()
+    closePopup()
+    return false
+
+  if ps.state == psOpenLMBDown:
+    if not ui.mbLeftDown:
+      ps.state = psOpen
+  elif ui.mbLeftDown and
+      popupShouldAutoClose(
+        ui.mx, ui.my, hitBounds.x, hitBounds.y, hitBounds.w, hitBounds.h,
+        style.autoCloseBorder, style.autoClose,
+      ):
+    closePopup()
+    return false
+
+  ps.prevLayer = ui.currentLayer
+  ps.prevHitClip = ui.hitClipRect
+  ps.prevFocusCaptured = ui.focusCaptured
+  ps.prevActiveSlotParent = int32(ui.autoLayoutState.activeSlotParent)
+  ps.prevActiveSlotUsed = ui.autoLayoutState.activeSlotUsed
+  ui.currentLayer = layerPopup
+  ui.focusCaptured = false
+  hitClip(hitBounds.x, hitBounds.y, hitBounds.w, hitBounds.h)
+
+  addLayoutDrawLayer(layerPopup, slot.nodeId, vg, bounds):
+    drawShadow(vg, bounds.x, bounds.y, bounds.w, bounds.h, style.shadow)
+    let (rx, ry, rw, rh) =
+      snapToGrid(bounds.x, bounds.y, bounds.w, bounds.h, style.backgroundStrokeWidth)
+    vg.fillColor(style.backgroundFillColor)
+    vg.strokeColor(style.backgroundStrokeColor)
+    vg.strokeWidth(style.backgroundStrokeWidth)
+    vg.beginPath()
+    vg.roundedRect(rx, ry, rw, rh, style.backgroundCornerRadius)
+    vg.fill()
+    vg.stroke()
+
+  beginLayoutViewportForSlot(slot, hitBounds)
+  pushDrawOffset(DrawOffset(ox: hitBounds.x, oy: hitBounds.y))
+  result = true
+
+proc beginPopup*(
+    id: ItemId, x, y, w, h: float, style: PopupStyle = borrowDefaultPopupStyle()
+): bool =
+  if not isPopupOpen(id):
+    return false
+
+  let (x, y) = addDrawOffset(x, y)
+  let slot = layoutSlot(id, rect(x, y, w, h))
+  beginPopupWithSlot(id, slot, style)
+
+proc endPopup*() =
+  alias(ui, g_uiState)
+  alias(ps, ui.popupState)
+
+  popDrawOffset()
+  endLayoutViewportForSlot()
+  ui.hitClipRect = ps.prevHitClip
+  ui.currentLayer = ps.prevLayer
+  ui.autoLayoutState.activeSlotParent = LayoutNodeId(ps.prevActiveSlotParent)
+  ui.autoLayoutState.activeSlotUsed = ps.prevActiveSlotUsed
+  if ps.closed:
+    ui.focusCaptured = false
+  elif ps.activeItem != 0:
+    ui.focusCaptured = true
+  else:
+    ui.focusCaptured = ps.prevFocusCaptured
+
+template popup*(id: ItemId, x, y, w, h: float, body: untyped) =
+  if beginPopup(id, x, y, w, h):
+    try:
+      body
+    finally:
+      endPopup()
+
+template popup*(id: ItemId, x, y, w, h: float, style: PopupStyle, body: untyped) =
+  if beginPopup(id, x, y, w, h, style):
+    try:
+      body
+    finally:
+      endPopup()

@@ -1,0 +1,5 @@
+*~
+*.swp
+*.exe
+ops/wayland/.zig-cache/
+ops/wayland/zig-out/

@@ -1,0 +1,150 @@
+import std/math
+
+import ops/okys
+
+import ops/types
+import ops/core
+import ops/drawing
+import ops/layout
+import ops/rect
+import ops/input
+import ops/defaults
+import ops/internal/widget_behavior
+import ops/widgets/common
+import ops/utils
+
+proc sectionHeader(
+    id: ItemId,
+    x, y, w: float,
+    label: string,
+    expanded_out: var bool,
+    subHeader: bool,
+    tooltip: string,
+    style: SectionHeaderStyle,
+    disabled: bool = false,
+): bool =
+  alias(ui, g_uiState)
+  alias(ss, ui.sectionHeaderState)
+  alias(s, style)
+
+  let (x, y) = addDrawOffset(x, y)
+  let h = s.height
+  let slot = layoutSlot(id, rect(x, y, w, h))
+
+  if ss.openSubHeaders:
+    if subHeader:
+      expanded_out = true
+    else:
+      ss.openSubHeaders = false
+  else:
+    if isHit(
+      slot.previousBounds.x,
+      slot.previousBounds.y,
+      max(0.0, slot.previousBounds.w - s.hitRightPad),
+      slot.previousBounds.h,
+    ):
+      captureSimpleWidget(id, disabled)
+
+      let behavior = simpleWidgetBehavior(id, disabled)
+      if behavior.clicked:
+        if not subHeader and ctrlDown():
+          expanded_out = true
+          ss.openSubHeaders = true
+        else:
+          expanded_out = not expanded_out
+
+  let expanded = expanded_out
+
+  addLayoutDrawLayer(ui.currentLayer, slot.nodeId, vg, bounds):
+    var (rx, ry, rw, rh) = snapToGrid(bounds.x, bounds.y, bounds.w, bounds.h)
+
+    vg.fillColor(s.backgroundColor)
+    vg.beginPath()
+    vg.rect(rx, ry, rw, rh)
+    vg.fill()
+
+    vg.strokeColor(s.separatorColor)
+    vg.beginPath()
+    vg.horizLine(rx, ry + rh, rw)
+    vg.stroke()
+
+    vg.save()
+    let ts = s.triangleSize
+    vg.translate(rx + s.triangleLeftPad, ry + rh * 0.5)
+    vg.scale(ts, ts)
+    vg.translate(1, 0)
+    if expanded:
+      vg.rotate(PI * 0.5)
+
+    vg.beginPath()
+    vg.moveTo(-1, 1)
+    vg.lineTo(-1, -1)
+    vg.lineTo(1.2, 0)
+    vg.closePath()
+    vg.fillColor(s.triangleColor)
+    vg.fill()
+    vg.restore()
+
+    let state = if disabled: wsDisabled else: wsNormal
+    vg.drawLabel(
+      rx + s.labelLeftPad, ry, rw - s.labelLeftPad, rh, label, state, s.label
+    )
+
+  if isHot(id):
+    handleTooltip(id, tooltip)
+
+  result = expanded_out
+
+template sectionHeader*(
+    label: string,
+    expanded: var bool,
+    tooltip: string = "",
+    style: SectionHeaderStyle = borrowDefaultSectionHeaderStyle(),
+    disabled: bool = false,
+): bool =
+  let i = instantiationInfo(fullPaths = true)
+  let id = nextId(i.filename, i.line, label)
+
+  nextRowHeight(style.height)
+  autoLayoutPre(section = true)
+  let result = sectionHeader(
+    id,
+    0,
+    g_uiState.autoLayoutState.y,
+    g_uiState.autoLayoutState.rowWidth,
+    label,
+    expanded,
+    subHeader = false,
+    tooltip,
+    style,
+    disabled,
+  )
+  autoLayoutPost(section = true)
+  result
+
+template subSectionHeader*(
+    label: string,
+    expanded: var bool,
+    tooltip: string = "",
+    style: SectionHeaderStyle = borrowDefaultSubSectionHeaderStyle(),
+    disabled: bool = false,
+): bool =
+  let i = instantiationInfo(fullPaths = true)
+  let id = nextId(i.filename, i.line, label)
+
+  nextRowHeight(style.height)
+  autoLayoutPre(section = true)
+  let result = sectionHeader(
+    id,
+    0,
+    g_uiState.autoLayoutState.y,
+    g_uiState.autoLayoutState.rowWidth,
+    label,
+    expanded,
+    subHeader = true,
+    tooltip,
+    style,
+    disabled,
+  )
+  autoLayoutPost(section = true)
+  result
