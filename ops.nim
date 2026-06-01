@@ -5,6 +5,7 @@ import ops/defaults
 import ops/drawing
 import ops/layout
 import ops/input
+import ops/selection
 import ops/widgets/common as commonModule
 import ops/widgets/popup as popupModule
 import ops/widgets/label as labelModule
@@ -32,7 +33,7 @@ import ops/widgets/scrollview as scrollViewModule
 import ops/widgets/groupbox as groupBoxModule
 import ops/widgets/dialog as dialogModule
 
-export types, core, lifecycle, defaults, drawing, layout, input
+export types, core, lifecycle, defaults, drawing, layout, input, selection
 export commonModule, popupModule, labelModule, buttonModule, imageModule
 export selectableModule
 export toggleButtonModule

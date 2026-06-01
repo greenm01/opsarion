@@ -167,6 +167,11 @@ state by ID). The tables group them by role.
 | `tableView` (`beginTableRow`, `drawTableHeader`, `tableCell`) | Header + resolved columns + virtual rows over caller-owned data. | Sorting/resizing are caller-driven. |
 | `treeNode` / `treeSubNode` | Expandable tree nodes. | Wrap section headers. |
 
+Ops also ships `ItemSelection` helpers for caller-owned list, table, tree, and
+inspector state. They cover replace, toggle, range selection, active-row
+movement, wrapping, resizing, and selected-index queries without coupling those
+widgets to one data model.
+
 ### Containers and overlays
 
 | Widget | Purpose | Notes |
@@ -196,5 +201,5 @@ state by ID). The tables group them by role.
 The unified layout refactor is in place: one frame-local arena is sized with
 `fixed`/`grow`/`percent`/`fit`, solved at frame end with current visuals, while
 pointer interaction reads previous-frame rects. Future work should build on that
-foundation: richer widget coverage, more complete theming, and higher-level
+foundation: release-grade text editing, more complete theming, and higher-level
 fit-content container APIs where applications need them.

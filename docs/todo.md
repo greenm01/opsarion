@@ -21,6 +21,8 @@ bind WebGPU packages.
 - Extend the Okys host ABI seam to X11, macOS, and Windows native handles.
 - Retire or quarantine legacy Ops WebGPU helper modules once all release targets
   use the Okys host ABI.
+- Use `ItemSelection` for caller-owned list/table/tree active-row and range
+  selection state instead of adding separate widget-local selection models.
 - Keep Gridmonger in the Okys smoke checklist: theme edits, HSE picker
   rendering, quit confirmation mouse input, and map rendering.
 - Keep a small benchmark history for text editing and representative okys
@@ -34,6 +36,9 @@ bind WebGPU packages.
   GLFW examples or apps that want Ops's bundled reference adapter.
 - Rendering stays Okys-first for the first release; an abstract primitive command
   buffer is deferred until Ops needs a non-Okys renderer.
+- Collection widgets remain data-model neutral. Ops provides selection helpers,
+  but applications keep ownership of row objects, sort order, filtering, and
+  persistence.
 - Wayland cursor shape and close/resize polish are tracked by the native
   Wayland ABI and smoke/demo builds.
 - Text-editing profiling is repeatable with `nimble benchTextEditing`; current

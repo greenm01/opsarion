@@ -200,6 +200,15 @@ task testAlgorithms, "run headless algorithm tests":
     "tests/test_algorithms", "/tmp/ops_test_algorithms", "/tmp/ops_test_algorithms_d"
   )
 
+task testSelection, "run headless item selection helper tests":
+  buildOkysGl()
+  nimRun(
+    "tests/test_selection",
+    CoreFlags & " -d:debug",
+    outPath = "/tmp/ops_test_selection",
+    nimcache = "/tmp/ops_test_selection_d",
+  )
+
 task testWidgetBehavior, "run headless widget behavior tests":
   runGlApp(
     "tests/test_widget_behavior", "/tmp/ops_test_widget_behavior",
@@ -245,7 +254,9 @@ proc runWindowTest(name: string) =
   )
 
 proc runAllHeadlessTests() =
-  for name in ["algorithms", "input_backend", "layout", "widget_behavior"]:
+  for name in [
+    "algorithms", "input_backend", "layout", "selection", "widget_behavior",
+  ]:
     buildOkysGl()
     nimRun(
       "tests/test_" & name,

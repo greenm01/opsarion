@@ -11,6 +11,11 @@ behavior. The repo includes a GLFW reference adapter for examples and a native
 Zig Wayland path for Linux Wayland sessions. Graphics runtime ownership belongs
 behind the Okys C ABI.
 
+For first-release work, the stable center is `import ops`: widget/layout/input
+APIs, `PlatformHooks`, and small caller-owned helpers such as `ItemSelection`.
+Platform adapters are intentionally thin reference paths; applications can feed
+normalized input directly and keep their own windowing or engine integration.
+
 Layout, widget, and style references live in [toolset.md](./toolset.md),
 [layout-model.md](./layout-model.md), and [theming.md](./theming.md). Renderer
 context lives in [webgpu.md](./webgpu.md). Check the [examples](/examples)
