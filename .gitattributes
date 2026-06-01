@@ -2,5 +2,9 @@
 *.nimble linguist-language=Nim
 *.nims linguist-language=Nim
 
+*.zig linguist-vendored
+*.c linguist-vendored
+*.h linguist-vendored
+
 ops/glad/** linguist-vendored
 examples/glad/** linguist-vendored
