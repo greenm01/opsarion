@@ -1,0 +1,6 @@
+*.nim linguist-language=Nim
+*.nimble linguist-language=Nim
+*.nims linguist-language=Nim
+
+ops/glad/** linguist-vendored
+examples/glad/** linguist-vendored
