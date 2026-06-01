@@ -131,49 +131,27 @@ task paneltest, "build panel test example":
 task minimal, "build minimal wgpu example":
   compileWgpuApp("examples/minimal", "/tmp/ops_minimal_d")
 
-task layoutInspectorDemo, "build layout inspector wgpu demo":
-  compileWgpuApp("examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d")
+task layoutInspectorDemo, "build layout inspector demo":
+  compileGlApp("examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d")
 
-task layoutAttachDemo, "build layout attach wgpu demo":
-  compileWgpuApp("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
+task layoutAttachDemo, "build layout attach demo":
+  compileGlApp("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
 
-task layoutAspectDemo, "build layout aspect-ratio wgpu demo":
-  compileWgpuApp("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
+task layoutAspectDemo, "build layout aspect-ratio demo":
+  compileGlApp("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
 
-task layoutErrorsDemo, "build layout diagnostics wgpu demo":
-  compileWgpuApp("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
+task layoutErrorsDemo, "build layout diagnostics demo":
+  compileGlApp("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
 
-task layoutStressDemo, "build layout stress wgpu demo":
-  compileWgpuApp("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
+task layoutStressDemo, "build layout stress demo":
+  compileGlApp("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
 
-task layoutDemos, "build every layout-focused wgpu demo":
-  buildOkysWgpu()
-  buildWgpuBackendIfNeeded()
-  nimCompile(
-    "examples/layout_inspector_demo",
-    wgpuFlags() & " -d:debug",
-    nimcache = "/tmp/ops_layout_inspector_demo_d",
-  )
-  nimCompile(
-    "examples/layout_attach_demo",
-    wgpuFlags() & " -d:debug",
-    nimcache = "/tmp/ops_layout_attach_demo_d",
-  )
-  nimCompile(
-    "examples/layout_aspect_demo",
-    wgpuFlags() & " -d:debug",
-    nimcache = "/tmp/ops_layout_aspect_demo_d",
-  )
-  nimCompile(
-    "examples/layout_errors_demo",
-    wgpuFlags() & " -d:debug",
-    nimcache = "/tmp/ops_layout_errors_demo_d",
-  )
-  nimCompile(
-    "examples/layout_stress_demo",
-    wgpuFlags() & " -d:debug",
-    nimcache = "/tmp/ops_layout_stress_demo_d",
-  )
+task layoutDemos, "build every layout-focused demo":
+  compileGlApp("examples/layout_inspector_demo", "/tmp/ops_layout_inspector_demo_d")
+  compileGlApp("examples/layout_attach_demo", "/tmp/ops_layout_attach_demo_d")
+  compileGlApp("examples/layout_aspect_demo", "/tmp/ops_layout_aspect_demo_d")
+  compileGlApp("examples/layout_errors_demo", "/tmp/ops_layout_errors_demo_d")
+  compileGlApp("examples/layout_stress_demo", "/tmp/ops_layout_stress_demo_d")
 
 task waylandMinimal, "build native Wayland minimal example":
   buildWaylandBackend()

@@ -1,20 +1,74 @@
 import std/strformat
+import std/os
+
+when defined(opsWgpu):
+  import ops/backends/wgpu_app
+else:
+  import glad/gl
+  import glfw
 
 import ops/okys
 
 import ops
 import ops/rect
-import ops/backends/wgpu_app
 import example_quit
 
 export rect
 
 type DemoRenderProc* = proc(vg: OpsRenderContext) {.closure.}
 
+proc loadDefaultDemoFonts(rc: OpsRenderContext) =
+  let dataDir = currentSourcePath().parentDir().parentDir() / "data"
+  if rc.createFont("sans", dataDir / "Roboto-Regular.ttf") == NoFont:
+    quit "Could not load regular font."
+  if rc.createFont("sans-bold", dataDir / "Roboto-Bold.ttf") == NoFont:
+    quit "Could not load bold font."
+
 proc runWgpuDemo*(title: string, width, height: int, render: DemoRenderProc) =
-  var config = defaultOpsWgpuAppConfig(title, width, height)
-  config.shouldClose = exampleQuitShortcutDown
-  runOpsWgpuApp(config, render)
+  when defined(opsWgpu):
+    var config = defaultOpsWgpuAppConfig(title, width, height)
+    config.shouldClose = exampleQuitShortcutDown
+    runOpsWgpuApp(config, render)
+  else:
+    glfw.initialize()
+
+    var cfg = DefaultOpenglWindowConfig
+    cfg.size = (w: width, h: height)
+    cfg.title = title
+    cfg.resizable = true
+    cfg.visible = true
+    cfg.nMultiSamples = 4
+    let win = newWindow(cfg)
+    useWindow(win)
+
+    if not gladLoadGL(glfw.getProcAddress):
+      quit "Failed to load GL"
+
+    let rc = createRenderContext({rifStencilStrokes, rifAntialias})
+    rc.setupGL(sampleCount = 4)
+    init(rc, glfw.getProcAddress)
+    loadDefaultDemoFonts(rc)
+
+    while not win.shouldClose:
+      if shouldRenderNextFrame():
+        glfw.pollEvents()
+      else:
+        glfw.waitEvents()
+      if exampleQuitShortcutDown():
+        win.shouldClose = true
+        continue
+
+      let size = win.size
+      glViewport(0, 0, size.w.int32, size.h.int32)
+      glClearColor(0.13, 0.15, 0.17, 1.0)
+      glClear(GL_COLOR_BUFFER_BIT or GL_STENCIL_BUFFER_BIT)
+
+      render(rc)
+      win.swapBuffers()
+
+    deinit()
+    deleteRenderContext(rc)
+    glfw.terminate()
 
 proc handleInspectorShortcut*(wasDown: var bool) =
   let down = isKeyDown(keyF12)
